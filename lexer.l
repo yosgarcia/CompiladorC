@@ -1,63 +1,57 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include "token.h"
+#include "symboltable.h"
+#include "parser.tab.h"
 %}
 
 %option noyywrap
-%option yylineno
-
-%{
-// Incluye el archivo de encabezado de token
-#include "token.h"
-%}
 
 %%
-"//".*       { /* Ignora los comentarios de una línea */ }
-"/*"([^*]|\n|\r\n)*"*/" { /* Ignora los comentarios de varias líneas */ }
-
-"/*"([^"*"]|(["*"]+[^"*/"]))* { return INCOMPLETE_MULTI_COMMENT;}
-
-"#include".* { /* Ignora los #include */}
-"#define".* { /* Ignora los #define */}
-"auto"|"enum"|"const"|"goto"|"double"|"case"|"float"|"default" { return KEYWORD; }
-"struct"|"register"|"unsigned"|"sizeof"|"int"|"typedef"|"short" { return KEYWORD; }
-"volatile"|"break"|"extern"|"continue"|"if"|"else"|"char"|"for"|"do" { return KEYWORD; }
-"switch"|"return"|"void"|"static"|"long"|"union"|"signed"|"while" { return KEYWORD; }
-
-[a-zA-Z_][a-zA-Z0-9_-]* { return IDENTIFIER; }
-(-?[1-9][0-9]{0,4})|0 { return CONST_INTEGER; }
-[0-9]+[a-zA-Z_-][a-zA-Z0-9_-]* { return ERROR; }
-(-?[0-9]+\.[0-9]+)  { return CONST_FLOAT; }
-\"[^\n\"]*\" { return CONST_STRING; }
-"!" { return OPERATOR_LOGICAL_NOT; }
-"&" { return OPERATOR_ADDRESS; }
-"+" { return OPERATOR_ADDITION; }
-"-" { return OPERATOR_SUBTRACTION; }
-"*" { return OPERATOR_MULTIPLICATION; }
-"/" { return OPERATOR_DIVISION; }
-"%" { return OPERATOR_MODULO; }
-">" { return OPERATOR_GREATER_THAN; }
-"<" { return OPERATOR_LESS_THAN; }
-"|" { return OPERATOR_BITWISE_OR; }
-"^" { return OPERATOR_BITWISE_XOR; }
-"=" { return OPERATOR_ASSIGN; }
-
-"," { return OPERATOR_COMMA; }
-"." { return OPERATOR_DOT; }
-"#" { return OPERATOR_HASH; }
-"(" { return OPEN_SMALL_BRACKETS; }
-")" { return CLOSE_SMALL_BRACKETS; }
-"[" { return OPEN_SQUARE_BRACKETS; }
-"]" { return CLOSE_SQUARE_BRACKETS; }
-"{" { return OPEN_CURLY_BRACKETS; }
-"}" { return CLOSE_CURLY_BRACKETS; }
-
-";" { return OPERATOR_SEMICOLON; }
-"\n" { /* Ignore el cambio de linea*/ }
-"\t" { /* Ignora el tabulador */ }
-" " { /* Ignora el espacio en blanco */ }
-. { return ERROR;}
-
+"+"         { printf("xd\n"); return ADDOP; }
+"*"         { printf("*\n"); return MULOP; }
+"/"         { return DIVOP; }
+"++"        { return INCR; }
+"||"        { return OROP; }
+"&&"        { return ANDOP; }
+"!"         { return NOTOP; }
+"=="        { return EQUOP; }
+"!="        { return EQUOP; }
+"<"         { return RELOP; }
+">"         { return RELOP; }
+"<="        { return RELOP; }
+">="        { return RELOP; }
+"("         {printf("parentesis (\n"); return LPAREN; }
+")"         { return RPAREN; }
+"["         { return LBRACK; }
+"]"         { return RBRACK; }
+"{"         { return LBRACE; }
+"}"         { return RBRACE; }
+";"         { return SEMI; }
+"."         { return DOT; }
+","         { return COMMA; }
+"="         {printf("equal =\n"); return ASSIGN; }
+"&"         { return REFER; }
+"if"        { return IF; }
+"else"      { return ELSE; }
+"while"     { return WHILE; }
+"for"       { return FOR; }
+"continue"  { return CONTINUE; }
+"break"     { return BREAK; }
+"void"      { return VOID; }
+"return"    { return RETURN; }
+"int"       {printf("INT\n"); return INT; }
+"char"      { return CHAR; }
+"float"     { return FLOAT; }
+"double"    { return DOUBLE; }
+[0-9]+      { yylval.int_val = atoi(yytext); return CONST_INTEGER; }
+[0-9]+"."[0-9]* { yylval.double_val = atof(yytext); return FCONST; }
+\'[^\']\'   { yylval.char_val = yytext[1]; return CCONST; }
+\"[^\"]*\"  { yylval.str_val = strdup(yytext); return STRING; }
+[a-zA-Z_][a-zA-Z0-9_]* { /*yylval.symtab_item = lookup_symbol(yytext);*/printf("IDXd\n"); return ID; }
+[ \t\n\r]+  ;  // Ignorar espacios en blanco
+.           { fprintf(stderr, "Caracter no reconocido: %s\n", yytext); }
 %%
-
+/*
+int yywrap() {
+    return 1;
+}
+*/

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "test2.c"
-#define ll long long
+#define ll int
 
 ll function(ll x, ll y){
     if (-x){
@@ -9,7 +9,7 @@ ll function(ll x, ll y){
     return (x%y)+x;
 }
 int main(){
-    ll x = 5.0;
+    ll x = 5;
     ll y = function(x,2);
     return 0;
 }

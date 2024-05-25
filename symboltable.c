@@ -47,6 +47,7 @@ Trie_node* add_letter_to_list(Trie_nodes_list* list, char letter){
     }
 }
 void insert_word(SymbolTable* table, char* word){
+    printf("inserting this word: %s\n",word);
     Trie_node* current = table->head;
     for(int i = 0; word[i] != '\0'; i++){
         if(current->children == NULL){
@@ -59,6 +60,7 @@ void insert_word(SymbolTable* table, char* word){
         }
         current = letter;
     }
+       
     current->is_end = 1;
     table->size++;
 }
@@ -154,12 +156,9 @@ void insert_symboltable_on_list(SymbolTableList* list, SymbolTable* table){
     else
     {
         SymbolTable *current = list->start;
-        while (current->next != NULL)
-        {
-            current = current->next;
-        }
-        current->next = table;
-        current->next->prev = current;
+        current->prev = table;
+        table->next = current;
+        list->start = table;
     }
 }
 
@@ -168,13 +167,13 @@ SymbolTable* pop_symboltable_stack(SymbolTableList* symboltable_stack){
     if(current == NULL){
         return NULL;
     }
-    while(current->next != NULL){
-        current = current->next;
+    if(current->next == NULL){
+        symboltable_stack->start = NULL;
+        return current;
     }
-    if(current->prev != NULL){
-        current->prev->next = NULL;
-        current->prev = NULL;
-    }
+    current->next->prev = NULL;
+    symboltable_stack->start = current->next;
+    current->next = NULL;
     return current;
 
 }
