@@ -1,0 +1,15 @@
+int functiontwo(int x, int y){
+    return (((x-y)*2)+5)%6;
+}
+
+ll function(ll x, ll y){
+    if (-x){
+        int w = 5;
+    }
+    return (x%y)+x;
+}
+int main(){
+    ll x = 5.0;
+    ll y = function(x,2);
+    return 0;
+}

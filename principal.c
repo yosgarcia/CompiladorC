@@ -13,6 +13,11 @@
  *      make run LOCATION=<nombre del archivo a procesar> -f makefile 
  * Ejemplo
  *      make run LOCATION=archivouno.c -f makefile 
+ * 
+ * 
+ * Flex lexer.l
+ * gcc principal.c linkedList.c preprocessor.c token.c lex.yy.c -o programa
+
 */
 
 #include <stdio.h>
@@ -21,7 +26,7 @@
 #include <stdbool.h>
 #include "preprocessor.h"
 #include "token.h"
-
+#include "symboltable.h"
 #define MAX_LINE_LENGTH 256
 
 extern int yylex(); // Función generada por Flex para obtener el siguiente token
@@ -44,9 +49,10 @@ Token* get_token(){
  * Funcion que inicia el proceso de scanning
  * @param Archivo de salida
  */
-void start_scanning(FILE* latex_file){
+void start_scanning(){
     Token* token;
     while((token = get_token()) != NULL){
+        printf("%s %s\n",token_type_to_string(token->type),token->lexeme);
         // Hace algo con el token
     }
     
@@ -64,5 +70,19 @@ int main(int argc, char *argv[]) {
     FILE* file = fopen("processedfile.c","r");
     yyin = file;
     Token* token;
+    start_scanning();
+    SymbolTable* s = create_symbol_table();
+    insert_word(s,"ELPEPE");
+    insert_word_with_value(s,"EL",5);
+    insert_word_with_value(s,"maxlatysh",52);
+    bool b =  update_value_node(s->head,"a",4);
+    if (b == false){
+        printf("error\n");
+    }
+    print_symbol_table(s);
+    printf("fin_impresion\n");
+    bool bb =  update_value_node(s->head,"ELPEPE",4);
+    print_symbol_table(s);
+
     return 0;
 }

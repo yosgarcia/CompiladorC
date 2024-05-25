@@ -41,6 +41,7 @@ char* token_type_to_string(enum token_type type) {
         case OPEN_CURLY_BRACKETS: return "OPEN_CURLY_BRACKETS";
         case CLOSE_CURLY_BRACKETS: return "CLOSE_CURLY_BRACKETS";
         case ERROR: return "ERROR";
+        case INCOMPLETE_MULTI_COMMENT: return "INCOMPLETE_MULTI_COMMENT";
         default: return "UNKNOWN_TOKEN_TYPE";
     }
 }

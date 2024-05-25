@@ -53,9 +53,12 @@ void process_file(const char *filename, FILE *output_file, linkedList* macros) {
             //inicia con #include
             char include_file[MAX_LINE_LENGTH];
             //scanear el nombre del archivo, que debe ir entre comillas
-            sscanf(line, "#include \"%[^\"]\"", include_file);
-            // Procesar el archivo incluido recursivamente
-            process_include(include_file, output_file, macros);
+            // Verifica si el include es con comillas dobles
+            if (sscanf(line, "#include \"%[^\"]\"", include_file) == 1) {
+                // Procesar el archivo incluido recursivamente
+                process_include(include_file, output_file, macros);
+            //si es include con <> no hace nada
+            }
         }
           else if (strncmp(line, "#define", strlen("#define")) == 0) {
             //inicia con #define
@@ -144,9 +147,10 @@ void read_define(const char *line, FILE *output_file, linkedList* macros) {
 }
 
 /*
- * Funcion que se encarga de reemplazar los macros en una linea
- * @param line: linea que contiene la macro a sustituir
- * @param macro_list: lista de macros que se encuentren
+ * Funcion que se encarga de reemplazar los macros en un archivo
+ * @param filename: nombre del archivo fuente
+ * @param macros: lista de macros que se encuentren
+ * @param finalfile: archivo final ya preprocesado
  */
 void substitute_macros(char* line, linkedList* macro_list) {
     listNode* current_macro = macro_list->start;
@@ -203,6 +207,9 @@ void replace_macros(const char *filename, linkedList *macros, const char* finalf
                 if ((pos == modified_line || !isalnum(*(pos - 1))) && !isalnum(pos[name_length])) {
                     // Calcular la cantidad de caracteres que se deben desplazar (si el valor es más largo que el nombre)
                     size_t move_length = value_length - name_length;
+                    // value length: ll = 2
+                    // name length: long long=9
+                    // move_length = -7
 
                     // Desplazar los caracteres hacia adelante o hacia atrás según sea necesario
                     if (move_length > 0) {
@@ -215,6 +222,9 @@ void replace_macros(const char *filename, linkedList *macros, const char* finalf
 
                     // Copiar el valor del macro en lugar del nombre del macro en la línea
                     memcpy(pos, current->value, value_length);
+
+                    // Actualizar la longitud de la línea después de la sustitución
+                    line_length += move_length;
                 }
                 // Mover el puntero de posición para continuar buscando más ocurrencias
                 pos += value_length;
