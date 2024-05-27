@@ -1,3 +1,7 @@
 int functiontwo(int x, int y){
-    return (((x-y)*2)+5)%6;
+    return x;
+}
+int main(){
+    int x =5;
+    y = 4;
 }

@@ -87,7 +87,7 @@ extern int yydebug;
     ASSIGN = 288,                  /* ASSIGN  */
     REFER = 289,                   /* REFER  */
     ID = 290,                      /* ID  */
-    CONST_INTEGER = 291,           /* CONST_INTEGER  */
+    ICONST = 291,                  /* ICONST  */
     FCONST = 292,                  /* FCONST  */
     CCONST = 293,                  /* CCONST  */
     STRING = 294                   /* STRING  */
@@ -99,14 +99,16 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 16 "parser.y"
+#line 15 "parser.y"
 
     char char_val;
-    int int_val;
-    double double_val;
-    char* str_val;
+	int int_val;
+	double double_val;
+	char* str_val;
+    char* str_val_id;
+	SymbolTableList* symtablist;
 
-#line 110 "parser.tab.h"
+#line 112 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

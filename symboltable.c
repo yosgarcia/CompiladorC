@@ -1,6 +1,7 @@
 #include "symboltable.h"
 #include <stdbool.h>
 
+//Trie
 
 Trie_node* create_trie_node(char letter){
     Trie_node* new_node = calloc(1, sizeof(Trie_node));
@@ -46,6 +47,90 @@ Trie_node* add_letter_to_list(Trie_nodes_list* list, char letter){
         return new_node;
     }
 }
+
+void print_trie(Trie_node* root, int level){
+    if(root == NULL){
+        return;
+    }
+
+    for (int i = 0; i < level; i++)
+    {
+        printf(" ");
+    }
+    if(level > 0){
+        printf("|-");
+    }
+
+    printf("%c\n", root->letter);
+    if(root->children != NULL){
+        Trie_node* current = root->children->start;
+        while(current != NULL){
+            print_trie(current, level + 1);
+            current = current->next;
+        }
+    }
+}
+// Función recursiva para imprimir los nodos del trie como palabras completas
+void print_trie_node(Trie_node *node, char *buffer, int depth) {
+    if (node == NULL) return;
+
+    // Agrega la letra actual al buffer
+    buffer[depth] = node->letter;
+    
+    // Si es el final de una palabra, imprime la palabra completa
+    if (node->is_end) {
+        buffer[depth + 1] = '\0'; // Termina la cadena
+        printf("Palabra: %s (línea: %d, scope: %s, valor: %d)\n", buffer, node->line, node->scope, node->value);
+    }
+    
+    // Recorrer los hijos del nodo
+    if(node->children == NULL) return;
+    Trie_node* child = node->children->start;
+    while (child != NULL) {
+        print_trie_node(child, buffer, depth + 1);
+        child = child->next;
+    }
+}
+
+int update_value_node(Trie_node* root, char* word, int value){
+    Trie_node* node = find_word(root,word);
+    if (node){
+        node->value = value;
+        return true;
+    }
+    return false;
+}
+
+Trie_node* find_word(Trie_node* root, char* word){
+    Trie_node* current = root;
+    for(int i = 0; word[i] != '\0'; i++){
+        if(current->children == NULL){
+            return NULL;
+        }
+
+        Trie_node* letter = find_letter_on_list(current->children, word[i]);
+        if(letter == NULL){
+            return NULL;
+        }
+        current = letter;
+    }
+    if(current->is_end){
+        return current;
+    }
+    return NULL;
+
+}
+
+/*
+ * SymbolTable  
+*/
+SymbolTable* create_symbol_table(){
+    SymbolTable* new_table = calloc(1, sizeof(SymbolTable));
+    new_table->head = create_trie_node(' ');
+    new_table->size = 0;
+    return new_table;
+}
+
 void insert_word(SymbolTable* table, char* word){
     printf("inserting this word: %s\n",word);
     Trie_node* current = table->head;
@@ -82,103 +167,6 @@ void insert_word_with_value(SymbolTable* table, char* word, int value){
     table->size++;
 }
 
-
-Trie_node* find_word(Trie_node* root, char* word){
-    Trie_node* current = root;
-    for(int i = 0; word[i] != '\0'; i++){
-        if(current->children == NULL){
-            return NULL;
-        }
-
-        Trie_node* letter = find_letter_on_list(current->children, word[i]);
-        if(letter == NULL){
-            return NULL;
-        }
-        current = letter;
-    }
-    if(current->is_end){
-        return current;
-    }
-    return NULL;
-
-}
-int update_value_node(Trie_node* root, char* word, int value){
-    Trie_node* node = find_word(root,word);
-    if (node){
-        node->value = value;
-        return true;
-    }
-    return false;
-}
-void print_trie(Trie_node* root, int level){
-    if(root == NULL){
-        return;
-    }
-
-    for (int i = 0; i < level; i++)
-    {
-        printf(" ");
-    }
-    if(level > 0){
-        printf("|-");
-    }
-
-    printf("%c\n", root->letter);
-    if(root->children != NULL){
-        Trie_node* current = root->children->start;
-        while(current != NULL){
-            print_trie(current, level + 1);
-            current = current->next;
-        }
-    }
-}
-
-SymbolTable* create_symbol_table(){
-    SymbolTable* new_table = calloc(1, sizeof(SymbolTable));
-    new_table->head = create_trie_node(' ');
-    new_table->size = 0;
-    return new_table;
-}
-
-
-SymbolTableList* create_symboltable_list(){
-    SymbolTableList* new_list = calloc(1, sizeof(SymbolTableList));
-    new_list->start = NULL;
-    return new_list;
-}
-
-void insert_symboltable_on_list(SymbolTableList* list, SymbolTable* table){
-    
-    if (list->start == NULL)
-    {
-        list->start = table;
-    }
-    else
-    {
-        SymbolTable *current = list->start;
-        current->prev = table;
-        table->next = current;
-        list->start = table;
-    }
-}
-
-SymbolTable* pop_symboltable_stack(SymbolTableList* symboltable_stack){
-    SymbolTable* current = symboltable_stack->start;
-    if(current == NULL){
-        return NULL;
-    }
-    if(current->next == NULL){
-        symboltable_stack->start = NULL;
-        return current;
-    }
-    current->next->prev = NULL;
-    symboltable_stack->start = current->next;
-    current->next = NULL;
-    return current;
-
-}
-
-
 void print_symbol_table(SymbolTable *table) {
     if (table == NULL) {
         printf("Tabla de símbolos vacía.\n");
@@ -194,24 +182,71 @@ void print_symbol_table(SymbolTable *table) {
     printf("==================================================\n");
 }
 
-// Función recursiva para imprimir los nodos del trie como palabras completas
-void print_trie_node(Trie_node *node, char *buffer, int depth) {
-    if (node == NULL) return;
+/*
+ * SymbolTableList
+*/
+SymbolTableList* create_symboltable_list(){
+    SymbolTableList* new_list = calloc(1, sizeof(SymbolTableList));
+    new_list->start = NULL;
+    return new_list;
+}
 
-    // Agrega la letra actual al buffer
-    buffer[depth] = node->letter;
-    
-    // Si es el final de una palabra, imprime la palabra completa
-    if (node->is_end) {
-        buffer[depth + 1] = '\0'; // Termina la cadena
-        printf("Palabra: %s (línea: %d, scope: %s, valor: %d)\n", buffer, node->line, node->scope, node->value);
+SymbolTable* pop_symboltable_stack(SymbolTableList* symboltable_stack){
+    SymbolTable* current = symboltable_stack->start;
+    if(current == NULL){
+        return NULL;
     }
-    
-    // Recorrer los hijos del nodo
-    if(node->children == NULL) return;
-    Trie_node* child = node->children->start;
-    while (child != NULL) {
-        print_trie_node(child, buffer, depth + 1);
-        child = child->next;
+    if(current->next == NULL){
+        symboltable_stack->start = NULL;
+        return current;
     }
+    current->next->prev = NULL;
+    symboltable_stack->start = current->next;
+    current->next = NULL;
+    return current;
+}
+
+void insert_symboltable_on_list(SymbolTableList* list, SymbolTable* table){
+    if (list->start == NULL)
+    {
+        printf("deberia imprimirse esto al inicio\n");
+        list->start = table;
+    }
+    else
+    {
+        printf("insertando otro symboltable on list\n");
+        SymbolTable *current = list->start;
+        current->prev = table;
+        table->next = current;
+        list->start = table;
+    }
+}
+
+void insert_new_symboltable_on_list(SymbolTableList* list){
+    printf("insert_new_symboltable_on_list\n");
+    SymbolTable* newTable = create_symbol_table();
+    insert_symboltable_on_list(list,newTable);
+}
+
+void insert_word_with_value_on_top(SymbolTableList* list, char* word, int value){
+    insert_word_with_value(list->start,word,value);
+}
+void insert_word_on_top(SymbolTableList* list, char* word){
+    insert_word(list->start,word);
+}
+
+Trie_node* find_word_on_symboltablelist(SymbolTableList* list, char* word){
+    printf("empeze a buscar esta palabra jeje: %s\n",word);
+    if (list == NULL){
+        printf("lista nula\n");
+    }
+    else{
+        printf("lista NO nula\n");
+    }
+    if (list->start == NULL){
+        printf("este inicio esta nulo\n");
+    }
+    SymbolTable* primero = list->start;
+    printf("finddddd wooorrrr antes de funcion\n");
+    return find_word(list->start->head, word);
 }

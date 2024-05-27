@@ -60,9 +60,9 @@ void start_scanning(){
     
 }
 
-
+/*
 int main(int argc, char *argv[]) {
-    /*
+    
     if (argc != 2) {
         printf("argumentos invalidos");
         return 1;
@@ -88,8 +88,10 @@ int main(int argc, char *argv[]) {
     printf("fin_impresion\n");
     bool bb =  update_value_node(s->head,"ELPEPE",4);
     print_symbol_table(s);
-    */
+    
+   SymbolTableList* stl = calloc(1,sizeof(SymbolTableList));
     int w = parse_xd("processedfile.c");
 
     return 0;
 }
+*/
