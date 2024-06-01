@@ -80,7 +80,7 @@ void print_trie_node(Trie_node *node, char *buffer, int depth) {
     // Si es el final de una palabra, imprime la palabra completa
     if (node->is_end) {
         buffer[depth + 1] = '\0'; // Termina la cadena
-        printf("Palabra: %s (línea: %d, scope: %s, valor: %d)\n", buffer, node->line, node->scope, node->value);
+        printf("Palabra: %s (línea: %d)\n", buffer, node->line);
     }
     
     // Recorrer los hijos del nodo
@@ -132,7 +132,6 @@ SymbolTable* create_symbol_table(){
 }
 
 void insert_word(SymbolTable* table, char* word){
-    printf("inserting this word: %s\n",word);
     Trie_node* current = table->head;
     for(int i = 0; word[i] != '\0'; i++){
         if(current->children == NULL){
@@ -209,12 +208,10 @@ SymbolTable* pop_symboltable_stack(SymbolTableList* symboltable_stack){
 void insert_symboltable_on_list(SymbolTableList* list, SymbolTable* table){
     if (list->start == NULL)
     {
-        printf("deberia imprimirse esto al inicio\n");
         list->start = table;
     }
     else
     {
-        printf("insertando otro symboltable on list\n");
         SymbolTable *current = list->start;
         current->prev = table;
         table->next = current;
@@ -235,18 +232,21 @@ void insert_word_on_top(SymbolTableList* list, char* word){
     insert_word(list->start,word);
 }
 
-Trie_node* find_word_on_symboltablelist(SymbolTableList* list, char* word){
-    printf("empeze a buscar esta palabra jeje: %s\n",word);
-    if (list == NULL){
-        printf("lista nula\n");
-    }
-    else{
-        printf("lista NO nula\n");
-    }
-    if (list->start == NULL){
-        printf("este inicio esta nulo\n");
-    }
-    SymbolTable* primero = list->start;
-    printf("finddddd wooorrrr antes de funcion\n");
+Trie_node* find_word_on_start_symboltablelist(SymbolTableList* list, char* word){
     return find_word(list->start->head, word);
+}
+Trie_node* find_word_on_all_symboltablelist(SymbolTableList* list, char* word){
+    SymbolTable* symbolTable = list->start;
+
+    if(symbolTable == NULL){
+        return NULL;
+    }
+    while(symbolTable != NULL){
+        Trie_node* word_node = find_word(symbolTable->head,word);
+        if (word_node != NULL){
+            return word_node;
+        }
+        symbolTable = symbolTable->next;
+    }
+    return NULL;
 }

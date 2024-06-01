@@ -32,10 +32,10 @@ STRING      \"{printableChar}*\"
  
 %%
  
-"//".*        { printf("Eat up comment at line %d\n", lineno); } 
+"//".*         
 
-"/*"          { printf("Eat up comment from line %d ", lineno); BEGIN(ML_COMMENT); }
-<ML_COMMENT>"*/"    { printf("to line %d\n", lineno); BEGIN(INITIAL); }
+"/*"          {  BEGIN(ML_COMMENT); }
+<ML_COMMENT>"*/"    { BEGIN(INITIAL); }
 <ML_COMMENT>[^*\n]+		
 <ML_COMMENT>"*"			
 <ML_COMMENT>"\n"    { lineno += 1; }
@@ -55,7 +55,8 @@ STRING      \"{printableChar}*\"
 "return"|"RETURN"     { return RETURN; }
 
 
-"+"|"-"             { return ADDOP; }
+"+"             { return ADDOP; }
+"-"             { return MINUSOP; }
 "*"                 { return MULOP; }
 "/"                 { return DIVOP; }
 "++"|"--"           { return INCR; }
@@ -87,15 +88,15 @@ STRING      \"{printableChar}*\"
         //yylval.symtab_item = lookup(yytext);
         //yylval.str_val = malloc(yyleng * sizeof(char));
         //strcpy(yylval.str_val, yytext);
-        yylval.str_val_id = malloc(yyleng * sizeof(char));
-        strcpy(yylval.str_val_id, yytext);
+        yylval.value.sval = malloc(yyleng * sizeof(char));
+        strcpy(yylval.value.sval, yytext);
         return ID;
         }
-{ICONST}    { yylval.int_val   = atoi(yytext); return ICONST; }
-{FCONST}    { yylval.double_val = atof(yytext); return FCONST; }
-{CCONST}    { yylval.char_val  = yytext[0];    return CCONST; }
-{STRING}    { yylval.str_val = malloc(yyleng * sizeof(char));
-              strcpy(yylval.str_val, yytext);  return STRING; }
+{ICONST}    { yylval.value.ival   = atoi(yytext); return ICONST; }
+{FCONST}    { yylval.value.fval = atof(yytext); return FCONST; }
+{CCONST}    { yylval.value.cval  = yytext[0];    return CCONST; }
+{STRING}    { yylval.value.sval = malloc(yyleng * sizeof(char));
+              strcpy(yylval.value.sval, yytext);  return STRING; }
 
  
  

@@ -7,6 +7,13 @@
 #include <ctype.h>
 #include <stdbool.h>
 
+typedef union Value{
+    int ival;
+	double fval;
+	char cval;
+	char *sval;
+}Value;
+
 typedef struct Trie_node{
     char letter;
     struct Trie_nodes_list* children;
@@ -61,4 +68,6 @@ void insert_new_symboltable_on_list(SymbolTableList* list);
 void insert_word_with_value_on_top(SymbolTableList* list, char* word, int value);
 void insert_word_on_top(SymbolTableList* list, char* word);
 Trie_node* find_word_on_symboltablelist(SymbolTableList* list, char* word);
+Trie_node* find_word_on_all_symboltablelist(SymbolTableList* list, char* word);
+
 #endif

@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "*.y": "c"
+        "*.y": "c",
+        "typeinfo": "c",
+        "type_traits": "c",
+        "string.h": "c"
     }
 }

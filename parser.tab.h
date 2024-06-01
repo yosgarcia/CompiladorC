@@ -67,30 +67,31 @@ extern int yydebug;
     VOID = 268,                    /* VOID  */
     RETURN = 269,                  /* RETURN  */
     ADDOP = 270,                   /* ADDOP  */
-    MULOP = 271,                   /* MULOP  */
-    DIVOP = 272,                   /* DIVOP  */
-    INCR = 273,                    /* INCR  */
-    OROP = 274,                    /* OROP  */
-    ANDOP = 275,                   /* ANDOP  */
-    NOTOP = 276,                   /* NOTOP  */
-    EQUOP = 277,                   /* EQUOP  */
-    RELOP = 278,                   /* RELOP  */
-    LPAREN = 279,                  /* LPAREN  */
-    RPAREN = 280,                  /* RPAREN  */
-    LBRACK = 281,                  /* LBRACK  */
-    RBRACK = 282,                  /* RBRACK  */
-    LBRACE = 283,                  /* LBRACE  */
-    RBRACE = 284,                  /* RBRACE  */
-    SEMI = 285,                    /* SEMI  */
-    DOT = 286,                     /* DOT  */
-    COMMA = 287,                   /* COMMA  */
-    ASSIGN = 288,                  /* ASSIGN  */
-    REFER = 289,                   /* REFER  */
-    ID = 290,                      /* ID  */
-    ICONST = 291,                  /* ICONST  */
-    FCONST = 292,                  /* FCONST  */
-    CCONST = 293,                  /* CCONST  */
-    STRING = 294                   /* STRING  */
+    MINUSOP = 271,                 /* MINUSOP  */
+    MULOP = 272,                   /* MULOP  */
+    DIVOP = 273,                   /* DIVOP  */
+    INCR = 274,                    /* INCR  */
+    OROP = 275,                    /* OROP  */
+    ANDOP = 276,                   /* ANDOP  */
+    NOTOP = 277,                   /* NOTOP  */
+    EQUOP = 278,                   /* EQUOP  */
+    RELOP = 279,                   /* RELOP  */
+    LPAREN = 280,                  /* LPAREN  */
+    RPAREN = 281,                  /* RPAREN  */
+    LBRACK = 282,                  /* LBRACK  */
+    RBRACK = 283,                  /* RBRACK  */
+    LBRACE = 284,                  /* LBRACE  */
+    RBRACE = 285,                  /* RBRACE  */
+    SEMI = 286,                    /* SEMI  */
+    DOT = 287,                     /* DOT  */
+    COMMA = 288,                   /* COMMA  */
+    ASSIGN = 289,                  /* ASSIGN  */
+    REFER = 290,                   /* REFER  */
+    ID = 291,                      /* ID  */
+    ICONST = 292,                  /* ICONST  */
+    FCONST = 293,                  /* FCONST  */
+    CCONST = 294,                  /* CCONST  */
+    STRING = 295                   /* STRING  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -99,16 +100,20 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 15 "parser.y"
+#line 19 "parser.y"
 
+    Value value;
+    /*
     char char_val;
 	int int_val;
 	double double_val;
 	char* str_val;
+    */
     char* str_val_id;
+    
 	SymbolTableList* symtablist;
 
-#line 112 "parser.tab.h"
+#line 117 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
