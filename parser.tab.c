@@ -70,6 +70,7 @@
 #line 1 "parser.y"
 
 	#include "symboltable.c"
+    #include "ast.h"
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -82,9 +83,9 @@
     void print_error_variable_no_declarada (char* name, int line);
     SymbolTableList* symbol_table_stack;
     int yyerrstatus = 0; // Declaración de yyerrstatus
+    struct NodeAST* root = NULL;
 
-
-#line 88 "parser.tab.c"
+#line 89 "parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -590,7 +591,7 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    66,    66,    72,    72,    74,    78,    80,    80,    83,
+       0,    68,    68,    74,    74,    76,    78,    80,    80,    83,
       84,    86,    87,    89,    91,    95,    95,    97,    97,    97,
      103,   103,   106,   106,   106,   106,   107,   107,   107,   107,
      107,   111,   112,   116,   117,   120,   120,   122,   124,   127,
@@ -1329,20 +1330,12 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 5: /* function: function_head function_tail  */
-#line 74 "parser.y"
-                                      { 
-    insert_new_symboltable_on_list(symbol_table_stack);
-}
-#line 1338 "parser.tab.c"
-    break;
-
   case 39: /* inicio_for: FOR LPAREN  */
 #line 127 "parser.y"
                         {
         insert_new_symboltable_on_list(symbol_table_stack);
 }
-#line 1346 "parser.tab.c"
+#line 1339 "parser.tab.c"
     break;
 
   case 41: /* inicio_while: WHILE LPAREN  */
@@ -1350,7 +1343,7 @@ yyreduce:
                             {
         insert_new_symboltable_on_list(symbol_table_stack);
 }
-#line 1354 "parser.tab.c"
+#line 1347 "parser.tab.c"
     break;
 
   case 45: /* endtail: rbrace_token  */
@@ -1360,7 +1353,7 @@ yyreduce:
     SymbolTable* st = pop_symboltable_stack(symbol_table_stack);
     print_symbol_table(st);
 }
-#line 1364 "parser.tab.c"
+#line 1357 "parser.tab.c"
     break;
 
   case 56: /* new_variable: ID  */
@@ -1373,7 +1366,7 @@ yyreduce:
             print_error_variable_redeclarada(((yyvsp[0].value).sval), lineno);
         }
     }
-#line 1377 "parser.tab.c"
+#line 1370 "parser.tab.c"
     break;
 
   case 57: /* new_variable: pointer ID  */
@@ -1386,7 +1379,7 @@ yyreduce:
             print_error_variable_redeclarada(((yyvsp[0].value).sval), lineno);
         }
     }
-#line 1390 "parser.tab.c"
+#line 1383 "parser.tab.c"
     break;
 
   case 58: /* new_variable: ID array  */
@@ -1399,7 +1392,7 @@ yyreduce:
             print_error_variable_redeclarada (((yyvsp[-1].value).sval), lineno);
         }
     }
-#line 1403 "parser.tab.c"
+#line 1396 "parser.tab.c"
     break;
 
   case 59: /* variable: ID  */
@@ -1410,7 +1403,7 @@ yyreduce:
             //insert_word_on_top(symbol_table_stack,yytext);
         }
     }
-#line 1414 "parser.tab.c"
+#line 1407 "parser.tab.c"
     break;
 
   case 60: /* variable: pointer ID  */
@@ -1421,7 +1414,7 @@ yyreduce:
             //insert_word_on_top(symbol_table_stack,yytext);
         }
     }
-#line 1425 "parser.tab.c"
+#line 1418 "parser.tab.c"
     break;
 
   case 61: /* variable: ID array  */
@@ -1432,7 +1425,7 @@ yyreduce:
             //insert_word_on_top(symbol_table_stack,yytext);
         }
     }
-#line 1436 "parser.tab.c"
+#line 1429 "parser.tab.c"
     break;
 
   case 66: /* constant: ICONST  */
@@ -1441,7 +1434,7 @@ yyreduce:
                 new_value.ival = (yyvsp[0].value).ival;
                 (yyval.value) = new_value;
                 }
-#line 1445 "parser.tab.c"
+#line 1438 "parser.tab.c"
     break;
 
   case 67: /* constant: FCONST  */
@@ -1450,7 +1443,7 @@ yyreduce:
                 new_value.ival = (yyvsp[0].value).ival;
                 (yyval.value) = new_value;
                 }
-#line 1454 "parser.tab.c"
+#line 1447 "parser.tab.c"
     break;
 
   case 71: /* var_init: ID ASSIGN expression  */
@@ -1463,20 +1456,20 @@ yyreduce:
             print_error_variable_redeclarada (((yyvsp[-2].value).sval), lineno);
         }
     }
-#line 1467 "parser.tab.c"
+#line 1460 "parser.tab.c"
     break;
 
   case 72: /* array_init: ID array ASSIGN lbrace_token values rbrace_token  */
 #line 234 "parser.y"
                                                              {
     }
-#line 1474 "parser.tab.c"
+#line 1467 "parser.tab.c"
     break;
 
   case 89: /* expression: sign constant  */
 #line 255 "parser.y"
                   {(yyval.value) = (yyvsp[0].value);}
-#line 1480 "parser.tab.c"
+#line 1473 "parser.tab.c"
     break;
 
   case 91: /* incr_id: ID INCR  */
@@ -1486,7 +1479,7 @@ yyreduce:
             print_error_variable_no_declarada (((yyvsp[-1].value).sval), lineno);
         }
     }
-#line 1490 "parser.tab.c"
+#line 1483 "parser.tab.c"
     break;
 
   case 92: /* incr_id: INCR ID  */
@@ -1496,29 +1489,29 @@ yyreduce:
             print_error_variable_no_declarada (((yyvsp[0].value).sval), lineno);
         }
     }
-#line 1500 "parser.tab.c"
+#line 1493 "parser.tab.c"
     break;
 
   case 106: /* semi_token: error  */
 #line 284 "parser.y"
                           {yyerror("Falta ; al final de la instruccion"); yyerrok;}
-#line 1506 "parser.tab.c"
+#line 1499 "parser.tab.c"
     break;
 
   case 108: /* rbrace_token: error  */
 #line 285 "parser.y"
                              {yyerror("Falta } al final"); yyerrok;}
-#line 1512 "parser.tab.c"
+#line 1505 "parser.tab.c"
     break;
 
   case 110: /* lbrace_token: error  */
 #line 286 "parser.y"
                               {yyerror("Esperaba un {"); yyerrok;}
-#line 1518 "parser.tab.c"
+#line 1511 "parser.tab.c"
     break;
 
 
-#line 1522 "parser.tab.c"
+#line 1515 "parser.tab.c"
 
       default: break;
     }

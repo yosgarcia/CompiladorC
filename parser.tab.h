@@ -100,7 +100,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 19 "parser.y"
+#line 20 "parser.y"
 
     Value value;
     /*
@@ -112,8 +112,9 @@ union YYSTYPE
     char* str_val_id;
     
 	SymbolTableList* symtablist;
+    struct NodeAST* node;
 
-#line 117 "parser.tab.h"
+#line 118 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

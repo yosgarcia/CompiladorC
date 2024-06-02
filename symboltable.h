@@ -67,7 +67,7 @@ void insert_symboltable_on_list(SymbolTableList* list, SymbolTable* table);
 void insert_new_symboltable_on_list(SymbolTableList* list);
 void insert_word_with_value_on_top(SymbolTableList* list, char* word, int value);
 void insert_word_on_top(SymbolTableList* list, char* word);
-Trie_node* find_word_on_symboltablelist(SymbolTableList* list, char* word);
+Trie_node* find_word_on_start_symboltablelist(SymbolTableList* list, char* word);
 Trie_node* find_word_on_all_symboltablelist(SymbolTableList* list, char* word);
 
 #endif

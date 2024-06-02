@@ -65,80 +65,36 @@
 
 %%
 
-program: functions {
-    root = create_ast_node(PROGRAM_NODE, "PROGRAM");
-    add_child(root, $1);
-}; 
+program: functions ; 
 
 
 /* functions */
 //functions_optional: functions | /* empty */ ;
 
-functions: functions function {
-    $$ = create_and_add_node(FUNCTION_NODE, "FUNCTION", $1);
-    add_child($$, $2);
-}
-| function  ;
+functions: functions function | function  ;
 
-function: function_head function_tail {
-    $$ = create_ast_node(FUNCTION_NODE, "FUNCTION"); 
-    add_child($$, $1);
-    add_child($$, $2);
-};
+function: function_head function_tail ;
 		
-function_head: return_type ID LPAREN parameters_optional RPAREN {
-    $$ = create_and_add_node(FUNCTION_HEAD_NODE, "FUNCTION_HEAD", NULL); // Crear nodo de cabecera de función
-    add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
-    add_child($$, create_ast_node(ID_NODE, $2)); // Añadir nodo de identificador como hijo
-    add_child($$, $4); // Añadir los parámetros (si los hay) como hijos
-};
+function_head: return_type ID LPAREN parameters_optional RPAREN;
 
-return_type: type | type pointer {
-    $$ = create_ast_node(RETURN_TYPE_NODE, "RETURN_TYPE"); // Crear nodo de tipo de retorno
-    add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
-    if ($2 != NULL) {
-        add_child($$, create_ast_node(POINTER_NODE, $2->lexema)); // Añadir nodo de puntero (si lo hay) como hijo
-    }
-}
+return_type: type | type pointer 
 ;
 
 parameters_optional: parameters 
     | /* empty */  ;
 
-parameters: parameters COMMA parameter {
-    add_child($1, $3); // Añadir nuevo parámetro a la lista de parámetros
-    $$ = $1; // Devolver la lista de parámetros actualizada
-} | parameter ;
+parameters: parameters COMMA parameter 
+    | parameter ;
 
-parameter : type new_variable {
-    $$ = create_and_add_node(PARAMETER_NODE, "PARAMETER", NULL); // Crear nodo de parámetro
-    add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
-    add_child($$, create_ast_node(ID_NODE, $2)); // Añadir nodo de identificador como hijo
-};
+parameter : type new_variable ;
 
-function_tail: lbrace_token statements_optional return_optional endtail {
-    $$ = create_ast_node(FUNCTION_TAIL_NODE, "FUNCTION_TAIL"); // Crear nodo de cola de función
-    add_child($$, $2); // Añadir las declaraciones y las instrucciones como hijos
-    if ($3 != NULL) {
-        add_child($$, $3); // Añadir el nodo de retorno (si lo hay) como hijo
-    }
-};
+function_tail: lbrace_token statements_optional return_optional endtail ;
 
 // declarations_optional: declarations | /* empty */ ;
 
-statements_optional: statements | /* empty */ {
-    if ($1 != NULL) {
-        $$ = create_and_add_node(STATEMENTS_NODE, "STATEMENTS", NULL); // Crear nodo de instrucciones
-        add_child($$, $1); // Añadir las instrucciones como hijo
-    } else {
-        $$ = NULL;
-    }
-};
+statements_optional: statements | /* empty */ ;
 
-return_optional: RETURN expression semi_token {
-    $$ = create_and_add_node(RETURN_NODE, "RETURN", NULL); // Crear nodo de retorno
-    add_child($$, $2); // Añadir la expresión como hijo
-}| RETURN semi_token | /* empty */;
+return_optional: RETURN expression semi_token | RETURN semi_token | /* empty */;
 
 ;
 // int x,y[100],*xd;
@@ -345,12 +301,6 @@ void yyerror (const char *s) {
     //exit(1);
 }
 
-
-/*
-bison -d parser.y
-gcc -o programa parser.tab.c lex.yy.c
-./programa test2.c
-*/
 int main (int argc, char *argv[]){
     symbol_table_stack = create_symboltable_list();
     insert_new_symboltable_on_list(symbol_table_stack);
