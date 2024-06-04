@@ -76,22 +76,23 @@ extern int yydebug;
     NOTOP = 277,                   /* NOTOP  */
     EQUOP = 278,                   /* EQUOP  */
     RELOP = 279,                   /* RELOP  */
-    LPAREN = 280,                  /* LPAREN  */
-    RPAREN = 281,                  /* RPAREN  */
-    LBRACK = 282,                  /* LBRACK  */
-    RBRACK = 283,                  /* RBRACK  */
-    LBRACE = 284,                  /* LBRACE  */
-    RBRACE = 285,                  /* RBRACE  */
-    SEMI = 286,                    /* SEMI  */
-    DOT = 287,                     /* DOT  */
-    COMMA = 288,                   /* COMMA  */
-    ASSIGN = 289,                  /* ASSIGN  */
-    REFER = 290,                   /* REFER  */
-    ID = 291,                      /* ID  */
-    ICONST = 292,                  /* ICONST  */
-    FCONST = 293,                  /* FCONST  */
-    CCONST = 294,                  /* CCONST  */
-    STRING = 295                   /* STRING  */
+    DECR = 280,                    /* DECR  */
+    LPAREN = 281,                  /* LPAREN  */
+    RPAREN = 282,                  /* RPAREN  */
+    LBRACK = 283,                  /* LBRACK  */
+    RBRACK = 284,                  /* RBRACK  */
+    LBRACE = 285,                  /* LBRACE  */
+    RBRACE = 286,                  /* RBRACE  */
+    SEMI = 287,                    /* SEMI  */
+    DOT = 288,                     /* DOT  */
+    COMMA = 289,                   /* COMMA  */
+    ASSIGN = 290,                  /* ASSIGN  */
+    REFER = 291,                   /* REFER  */
+    ID = 292,                      /* ID  */
+    ICONST = 293,                  /* ICONST  */
+    FCONST = 294,                  /* FCONST  */
+    CCONST = 295,                  /* CCONST  */
+    STRING = 296                   /* STRING  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -100,7 +101,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "parser.y"
+#line 22 "parser.y"
 
     Value value;
     /*
@@ -110,7 +111,6 @@ union YYSTYPE
 	char* str_val;
     */
     char* str_val_id;
-    
 	SymbolTableList* symtablist;
     struct NodeAST* node;
 

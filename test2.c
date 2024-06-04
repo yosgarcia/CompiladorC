@@ -1,15 +1,20 @@
 void functiontwo(int x, int y){
-    char w;
+    char w,chardos;
     return; 
 }
+
 int main(){
+    int primer_variable = 3;
+    --primer_variable;
+    int segunda_variable;
+    primer_variable--;
     int x =5, abc, *pointerxd ;
     for (int i =2;i<5;i++){
         int nuevo;
         ++x;
         continue;
     }
-    while (1){
+    while (x == 6){
         break;
     }
     for(;;){
@@ -22,4 +27,7 @@ int main(){
     int y = x - l;
 
     functiontwo(x,y);
+}
+int functiontree(int uwu){
+    return 39;
 }

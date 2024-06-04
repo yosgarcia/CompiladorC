@@ -14,6 +14,8 @@
     SymbolTableList* symbol_table_stack;
     int yyerrstatus = 0; // Declaración de yyerrstatus
     struct NodeAST* root = NULL;
+    int estoy_main = 0;
+
 %}
 
 /* YYSTYPE union */
@@ -26,14 +28,13 @@
 	char* str_val;
     */
     char* str_val_id;
-    
 	SymbolTableList* symtablist;
     struct NodeAST* node;
 }
 
 /* token definition */
 %token<value> CHAR INT FLOAT DOUBLE IF ELSE WHILE FOR CONTINUE BREAK VOID RETURN
-%token<value> ADDOP MINUSOP MULOP DIVOP INCR OROP ANDOP NOTOP EQUOP RELOP
+%token<value> ADDOP MINUSOP MULOP DIVOP INCR OROP ANDOP NOTOP EQUOP RELOP DECR
 %token<value> LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE SEMI DOT COMMA ASSIGN REFER
 %token <value> ID
 %token <value> ICONST FCONST CCONST STRING 
@@ -50,14 +51,32 @@
 %right ASSIGN
 %left COMMA
 
-%type <value> var_init
-%type <value> constant
-%type <value> expression
-%type <value> function_call
-%type <value> var_ref
-%type <value> variable
-%type <value> pointer
-%type <value> incr_id
+%type <node> var_init init  
+%type <node> constant
+%type <node> expression optional_expression
+%type <node> function_call
+%type <node> var_ref
+%type <node> variable
+%type <node> pointer
+%type <node> incr_id
+%type <node> program
+%type <node> type
+%type <node> assigment
+%type <node> statement statements tail statements_optional optional_statements
+%type <node> if_statement else_if optional_else
+%type <node> for_statement while_statement
+%type <node> functions function function_head function_tail
+%type <node> return_optional
+%type <node> parameters_optional parameters parameter
+%type <node> return_type
+%type <node> declaration
+%type <node> names values
+%type <node> new_variable
+%type <node> sign 
+%type <node> call_param
+%type <node> call_params
+%type <node> decr_id
+
 
 %start program
 
@@ -65,164 +84,352 @@
 
 %%
 
-program: functions {
-    root = create_ast_node(PROGRAM_NODE, "PROGRAM");
-    add_child(root, $1);
-}; 
+program:
+    functions {
+        root = create_ast_node(PROGRAM_NODE, "PROGRAM");
+        add_child(root, $1);
+    }
+; 
 
 
 /* functions */
 //functions_optional: functions | /* empty */ ;
 
-functions: functions function {
-    $$ = create_and_add_node(FUNCTION_NODE, "FUNCTION", $1);
-    add_child($$, $2);
-}
-| function  ;
+functions:
+    functions function {
+        $$ = create_ast_node(FUNCTIONS_NODE, "FUNCTIONS");
+        add_child($$, $1);
+        add_child($$, $2);
+        }
+    | function {
+        $$ = $1;
+    }
 
 function: function_head function_tail {
     $$ = create_ast_node(FUNCTION_NODE, "FUNCTION"); 
     add_child($$, $1);
     add_child($$, $2);
-};
-		
-function_head: return_type ID LPAREN parameters_optional RPAREN {
-    $$ = create_and_add_node(FUNCTION_HEAD_NODE, "FUNCTION_HEAD", NULL); // Crear nodo de cabecera de función
-    add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
-    add_child($$, create_ast_node(ID_NODE, $2)); // Añadir nodo de identificador como hijo
-    add_child($$, $4); // Añadir los parámetros (si los hay) como hijos
-};
-
-return_type: type | type pointer {
-    $$ = create_ast_node(RETURN_TYPE_NODE, "RETURN_TYPE"); // Crear nodo de tipo de retorno
-    add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
-    if ($2 != NULL) {
-        add_child($$, create_ast_node(POINTER_NODE, $2->lexema)); // Añadir nodo de puntero (si lo hay) como hijo
     }
-}
 ;
 
-parameters_optional: parameters 
-    | /* empty */  ;
-
-parameters: parameters COMMA parameter {
-    add_child($1, $3); // Añadir nuevo parámetro a la lista de parámetros
-    $$ = $1; // Devolver la lista de parámetros actualizada
-} | parameter ;
-
-parameter : type new_variable {
-    $$ = create_and_add_node(PARAMETER_NODE, "PARAMETER", NULL); // Crear nodo de parámetro
-    add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
-    add_child($$, create_ast_node(ID_NODE, $2)); // Añadir nodo de identificador como hijo
-};
-
-function_tail: lbrace_token statements_optional return_optional endtail {
-    $$ = create_ast_node(FUNCTION_TAIL_NODE, "FUNCTION_TAIL"); // Crear nodo de cola de función
-    add_child($$, $2); // Añadir las declaraciones y las instrucciones como hijos
-    if ($3 != NULL) {
-        add_child($$, $3); // Añadir el nodo de retorno (si lo hay) como hijo
+		
+function_head:
+    return_type ID LPAREN parameters_optional RPAREN {
+        insert_new_symboltable_on_list(symbol_table_stack);
+        $$ = create_ast_node(FUNCTION_HEAD_NODE, "FUNCTION_HEAD"); // Crear nodo de cabecera de función
+        add_child($$, create_ast_node(TYPE_NODE, ($1->lexema))); // Añadir nodo de tipo como hijo
+        add_child($$, create_ast_node(ID_NODE, ($2.sval))); // Añadir nodo de identificador como hijo
+        //$$ = create_and_add_node(FUNCTION_HEAD_NODE, "FUNCTION_HEAD", NULL); // Crear nodo de cabecera de función
+        //add_child($$, create_ast_node(TYPE_NODE, $1.lexema)); // Añadir nodo de tipo como hijo
+        //add_child($$, create_ast_node(ID_NODE, $2)); // Añadir nodo de identificador como hijo
+        //add_child($$, $4); // Añadir los parámetros (si los hay) como hijos
     }
-};
+;
 
-// declarations_optional: declarations | /* empty */ ;
+return_type:
+    type{
+        $$ = create_ast_node(RETURN_TYPE_NODE, "RETURN_TYPE"); // Crear nodo de tipo de retorno
+        add_child($$, create_ast_node(TYPE_NODE, $1->lexema)); // Añadir nodo de tipo como hijo
+    }
+    | type pointer ;
 
-statements_optional: statements | /* empty */ {
-    if ($1 != NULL) {
-        $$ = create_and_add_node(STATEMENTS_NODE, "STATEMENTS", NULL); // Crear nodo de instrucciones
-        add_child($$, $1); // Añadir las instrucciones como hijo
-    } else {
+parameters_optional:
+    parameters {
+        $$ = $1;
+    } | /* empty */ {
         $$ = NULL;
     }
-};
-
-return_optional: RETURN expression semi_token {
-    $$ = create_and_add_node(RETURN_NODE, "RETURN", NULL); // Crear nodo de retorno
-    add_child($$, $2); // Añadir la expresión como hijo
-}| RETURN semi_token | /* empty */;
-
 ;
-// int x,y[100],*xd;
+
+parameters:
+    parameters COMMA parameter {   
+        add_child($1, $3); // Añadir nuevo parámetro a la lista de parámetros
+        $$ = $1; // Devolver la lista de parámetros actualizada
+    }
+    | parameter {
+    }
+;
+
+parameter:
+    type new_variable {
+        $$ = create_ast_node(PARAMETER_NODE, "PARAMETER"); // Crear nodo de parámetro
+        add_child($$, create_ast_node(TYPE_NODE, $1->lexema)); // Añadir nodo de tipo como hijo
+        add_child($$, $2); // Añadir nodo de identificador como hijo
+    }
+;
+
+function_tail:
+    lbrace_token statements_optional return_optional endtail_function {
+        $$ = create_ast_node(FUNCTION_TAIL_NODE, "FUNCTION_TAIL"); // Crear nodo de cola de función
+        add_child($$, $2); // Añadir las declaraciones y las instrucciones como hijos
+        if ($3 != NULL) {
+            add_child($$, $3); // Añadir el nodo de retorno (si lo hay) como hijo
+        }
+    }
+;
+
+statements_optional:
+    statements {
+        if (($1 != NULL)) {
+            $$ = create_ast_node(STATEMENTS_NODE, "STATEMENTS"); // Crear nodo de instrucciones
+            add_child($$, $1); // Añadir las instrucciones como hijo
+        } else {
+            $$ = NULL;
+        }
+    } | /* empty */ {
+        $$ = NULL;
+    }
+;
+
+return_optional:
+    RETURN expression semi_token {
+        $$ = create_ast_node(RETURN_NODE, "RETURN"); // Crear nodo de retorno
+        add_child($$, $2); // Añadir la expresión como hijo
+    }
+    | RETURN semi_token {
+        $$ = create_ast_node(RETURN_NODE, "RETURN"); // Crear nodo de retorno
+    }
+    | /* empty */ {
+        $$ = NULL;
+    }
+;
+
+
 
 /* statements */
-statements: statements statement | statement ;
+statements:
+    statements statement { 
+        $$ = create_ast_node(STATEMENT_LIST_NODE, "STATEMENTS");
+        add_child($$, $1);
+        add_child($$, $2);
+    } | statement
+;
 
 statement:
-	if_statement | for_statement | while_statement | assigment semi_token |
-	CONTINUE semi_token | BREAK semi_token | function_call semi_token | incr_id semi_token | declaration
+    if_statement {
+        $$ = $1;
+    } | for_statement{
+        $$ = $1;
+    } | while_statement{
+        $$ = $1;
+    } | assigment semi_token {
+        $$ = $1;
+    }| CONTINUE semi_token {
+        $$ = create_ast_node(CONTINUE_NODE,"");
+    } | BREAK semi_token {
+        $$ = create_ast_node(BREAK_NODE,"");
+    } | function_call semi_token{
+        $$ = $1;
+    } | incr_id semi_token{
+        $$ = create_ast_node(INCR_ID_NODE_NODE,"INCR_ID_NODE_NODE");
+        add_child($$,$1);
+    } | decr_id semi_token{
+        $$ = create_ast_node(DECR_ID_NODE_NODE,"DECR_ID_NODE_NODE");
+        add_child($$,$1);
+    } | declaration {
+        $$ = $1;
+    }
 ;
 
 if_statement:
-	IF LPAREN expression RPAREN tail else_if optional_else |
-	IF LPAREN expression RPAREN tail optional_else
-;
-
-else_if: 
-	else_if ELSE IF LPAREN expression RPAREN tail |
-	ELSE IF LPAREN expression RPAREN tail
-;
-
-optional_else: ELSE tail | /* empty */ ;
-
-for_statement: inicio_for declaration  optional_expression semi_token optional_expression RPAREN tail  
+	IF LPAREN expression RPAREN tail else_if optional_else {
+        $$ = create_ast_node(IF_STATEMENT_NODE, "IF_STATEMENT_NODE");
+        add_child($$, $3);
+        add_child($$, $5);
+        add_child($$, $6);
+        if($7 != NULL){
+            add_child($$, $7);
+        }
+    }
     |
-    inicio_for semi_token optional_expression semi_token optional_expression RPAREN tail
+	IF LPAREN expression RPAREN tail optional_else {
+        
+        $$ = create_ast_node(IF_STATEMENT_NODE, "IF_STATEMENT"); 
+        add_child($$, $3); 
+        add_child($$, $5);  
+        if ($6 != NULL) {
+            add_child($$, $6); 
+        }
+    }
 ;
 
-inicio_for : FOR LPAREN {
+else_if:
+	else_if ELSE IF LPAREN expression RPAREN tail {
+        $$ = create_ast_node(ELSE_IF_NODE, "ELSE_IF");
+        add_child($$, $5);
+        add_child($$, $7); 
+    }
+    |
+	ELSE IF LPAREN expression RPAREN tail {
+        $$ = create_ast_node(ELSE_IF_NODE, "ELSE_IF");
+        add_child($$, $4);
+        add_child($$, $6);
+    }
+;
+
+optional_else:
+    ELSE tail {
+        $$ = create_ast_node(ELSE_NODE, "ELSE");
+        add_child($$, $2);
+    }
+    |
+    /* empty */ {
+        $$ = NULL;
+    }
+;
+
+for_statement:
+    inicio_for declaration  optional_expression semi_token optional_expression RPAREN tail {
+        $$ = create_ast_node(FOR_STATEMENT_NODE, "FOR_DECLARATION_STATEMENT");
+        add_child($$, $2);
+        add_child($$, $3);
+        add_child($$, $5);
+        add_child($$, $7);
+    }
+    |
+    inicio_for semi_token optional_expression semi_token optional_expression RPAREN tail {
+        $$ = create_ast_node(FOR_STATEMENT_NODE, "FOR_STATEMENT");
+        add_child($$, $3);
+        add_child($$, $5);
+        add_child($$, $7);
+    }
+;
+
+inicio_for:
+    FOR LPAREN {
         insert_new_symboltable_on_list(symbol_table_stack);
-};
+    }
+;
 
 
-while_statement: inicio_while optional_expression RPAREN tail ;
- //| error {yyerror("Error en la declaración del while"); yyerrok;}
+while_statement:
+    inicio_while optional_expression RPAREN tail {
+        $$ = create_ast_node(WHILE_STATEMENT_NODE, "WHILE_STATEMENT");
+        add_child($$, $2);
+        add_child($$, $4);
+    }
+;
 
-inicio_while : WHILE LPAREN {
+
+inicio_while:
+    WHILE LPAREN {
         insert_new_symboltable_on_list(symbol_table_stack);
-}
-tail: lbrace_token optional_statements endtail //| error {yyerror("Falta de apertura de contexto -> {"); yyerrok;}
+    }
 ;
 
-optional_statements : /*empty*/ |  statements
-
-endtail: rbrace_token {
-    //printf("voy a hacer pop endtail\n");
-    SymbolTable* st = pop_symboltable_stack(symbol_table_stack);
-    print_symbol_table(st);
-} //| error {yyerror("Falta de cierre de contexto -> }"); yyerrok;}
-
-declaration: type names semi_token
-
-
-type: INT | CHAR | FLOAT | DOUBLE | VOID //| error {yyerror("Falta de tipo"); yyerrok;}
+tail:
+    lbrace_token optional_statements end_tail {
+        $$ = create_ast_node(TAIL_NODE, "TAIL");
+        if ($2 != NULL) {
+            add_child($$, $2); // Añadir las instrucciones opcionales como hijo
+        }
+    }
 ;
 
-names: names COMMA new_variable | names COMMA init | new_variable | init ;
+optional_statements:
+    /* empty */ {
+        $$ = NULL; // Nodo vacío si no hay instrucciones
+    }
+    |
+    statements {
+        $$ = $1; // Devolver el nodo de instrucciones
+    }
+;
 
-new_variable: ID {
+
+endtail_function:
+    rbrace_token {
+        SymbolTable* st = pop_symboltable_stack(symbol_table_stack);
+        print_symbol_table(st);
+        if(estoy_main){
+            estoy_main = 0; //Salir del main
+        }
+    }
+;
+
+end_tail:
+    rbrace_token {
+        SymbolTable* st = pop_symboltable_stack(symbol_table_stack);
+        print_symbol_table(st);
+    }
+;
+
+
+declaration:
+    type names semi_token {
+        $$ = create_ast_node(DECLARATION_NODE, "DECLARATION"); // Crear nodo de declaración
+        add_child($$, $1); // Añadir el tipo como hijo
+        add_child($$, $2); // Añadir los nombres como hijo
+    }
+;
+
+
+type:
+    INT {
+        $$ = create_ast_node(TYPE_NODE, "INT");
+    }
+    | CHAR {
+        $$ = create_ast_node(TYPE_NODE, "CHAR");
+    }
+    | FLOAT {
+        $$ = create_ast_node(TYPE_NODE, "FLOAT");
+    }
+    | DOUBLE {
+        $$ = create_ast_node(TYPE_NODE, "DOUBLE");
+    }
+    | VOID {
+        $$ = create_ast_node(TYPE_NODE, "VOID");
+    }
+;
+
+names:
+    names COMMA new_variable {
+        $$ = $1;
+        add_child($$, $3); // Añadir la nueva variable como hijo
+    }
+    | names COMMA init {
+        $$ = $1;
+        add_child($$, $3); // Añadir la inicialización como hijo
+    }
+    | new_variable {
+        $$ = create_ast_node(NAMES_NODE, "NAMES"); // Crear nodo de nombres
+        add_child($$, $1); // Añadir la nueva variable como hijo
+    }
+    | init {
+        $$ = create_ast_node(NAMES_NODE, "NAMES"); // Crear nodo de nombres
+        add_child($$, $1); // Añadir la inicialización como hijo
+    }
+;
+
+new_variable:
+    ID {
         if(find_word_on_all_symboltablelist(symbol_table_stack,$1.sval) == NULL){
             insert_word_on_top(symbol_table_stack,$1.sval);
+            $$ = create_ast_node(VARIABLE_NODE, $1.sval);
         }
         else{
             print_error_variable_redeclarada(($1.sval), lineno);
+            $$ = NULL;
         }
     }
-    |
-    pointer ID
-    {
+    | pointer ID {
         if(find_word_on_all_symboltablelist(symbol_table_stack,$2.sval) == NULL){
             insert_word_on_top(symbol_table_stack,$2.sval);
+            $$ = create_ast_node(VARIABLE_NODE, $2.sval);
         }
         else{
             print_error_variable_redeclarada(($2.sval), lineno);
+            $$ = NULL;
         }
     }
-    |
-    ID array {
+    | ID array {
         if(find_word_on_all_symboltablelist(symbol_table_stack,$1.sval) == NULL){
             insert_word_on_top(symbol_table_stack, ($1.sval));
+            $$ = create_ast_node(VARIABLE_NODE, $1.sval);
         }
         else{
             print_error_variable_redeclarada (($1.sval), lineno);
+            $$ = NULL;
         }
     }
 ;
@@ -231,99 +438,252 @@ variable: ID {
         if(find_word_on_all_symboltablelist(symbol_table_stack,$1.sval) == NULL){
             print_error_variable_no_declarada(($1.sval), lineno);
             //insert_word_on_top(symbol_table_stack,yytext);
+            $$ = NULL;
+        } else{
+            $$ = create_ast_node(VARIABLE_NODE, $1.sval);
         }
     }
     | pointer ID {
-        if(find_word_on_all_symboltablelist(symbol_table_stack,$1.sval) == NULL){
+        if(find_word_on_all_symboltablelist(symbol_table_stack,$2.sval) == NULL){
             print_error_variable_no_declarada(($2.sval), lineno);
+            $$ = NULL;
             //insert_word_on_top(symbol_table_stack,yytext);
+        } else{
+            $$ = create_ast_node(VARIABLE_NODE, $2.sval);
         }
     }
     | ID array {
         if(find_word_on_all_symboltablelist(symbol_table_stack,$1.sval) == NULL){
             print_error_variable_no_declarada(($1.sval), lineno);
             //insert_word_on_top(symbol_table_stack,yytext);
+            $$ = NULL;
+        } else{
+            $$ = create_ast_node(VARIABLE_NODE, $1.sval);
         }
-    };
-pointer: pointer MULOP | MULOP ;
-
-array: array LBRACK expression RBRACK | LBRACK expression RBRACK ;
-
-constant: ICONST {Value new_value;
-                new_value.ival = $1.ival;
-                $$ = new_value;
-                }
-                | 
-                FCONST 
-                {Value new_value;
-                new_value.ival = $1.ival;
-                $$ = new_value;
-                }
-                | 
-                CCONST ;
-
-
-init: var_init  | array_init ;
-
-var_init : ID ASSIGN expression{
-        if( (find_word_on_start_symboltablelist(symbol_table_stack,$1.sval)) == NULL){
-            insert_word_with_value_on_top(symbol_table_stack,$1.sval,$3.ival);
-        }
-        else{
-            print_error_variable_redeclarada (($1.sval), lineno);
-        }
-    };
+    }
+;
     
+pointer:
+    pointer MULOP {
+        $$ = $1;
+    }
+    | MULOP {
+        $$ = create_ast_node(POINTER_NODE, "*");
+    }
+;
 
-array_init: ID array ASSIGN lbrace_token values rbrace_token {
-    };
+array:
+    array LBRACK expression RBRACK | LBRACK expression RBRACK ;
 
-values: values COMMA constant | constant ;
-
-
-optional_expression : expression | /*empty*/;
-
-expression:
-    expression ADDOP expression |
-    expression MINUSOP expression |
-    expression MULOP expression |
-    expression DIVOP expression |
-    incr_id|
-    expression OROP expression |
-    expression ANDOP expression |
-    NOTOP expression |
-    expression EQUOP expression |
-    expression RELOP expression |
-    LPAREN expression RPAREN |
-    var_ref |
-    sign constant {$$ = $2;}|
-    function_call
+constant:
+    ICONST {               
+        $$ = create_ast_node(CONSTANT_NODE, intToStr($1.ival));
+    }
+    | FCONST {
+        $$ = NULL;
+    }
+    | CCONST {
+        $$ = NULL;
+    }
 ;
 
 
-incr_id : ID INCR{
+init:
+    var_init {
+        $$ = $1;
+    } | array_init {
+        $$ = NULL;
+    }
+;
+
+var_init:
+    ID ASSIGN expression{
+        if( (find_word_on_start_symboltablelist(symbol_table_stack,$1.sval)) == NULL){
+            
+            insert_word_on_top(symbol_table_stack,$1.sval);
+            $$ = create_ast_node(VAR_INIT_NODE, "VAR_INIT");
+            add_child($$, create_ast_node(ID_NODE, $1.sval));
+            add_child($$, $3);
+        }
+        else{
+            print_error_variable_redeclarada (($1.sval), lineno);
+            $$ = NULL;
+        }
+    }
+;
+
+array_init: ID array ASSIGN lbrace_token values rbrace_token
+
+values:
+    values COMMA constant {
+        $$ = $1;
+        add_child($$, $3);
+    } | constant {
+        $$ = create_ast_node(VALUES_NODE, "VALUES");
+        add_child($$, $1);
+    }
+;
+
+optional_expression:
+    expression {
+        $$ = $1;
+    } | /* empty */ {
+        $$ = NULL;
+    }
+;
+
+expression:
+    expression ADDOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "ADDOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | expression MINUSOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "MINUSOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | expression MULOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "MULOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | expression DIVOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "DIVOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | incr_id {
+        $$ = create_ast_node(INCR_ID_NODE_NODE, "INCR_ID_NODE_NODE");
+        add_child($$,$1);
+    } | decr_id {
+        $$ = create_ast_node(DECR_ID_NODE_NODE, "DECR_ID_NODE_NODE");
+        add_child($$,$1);
+    } | expression OROP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "OROP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | expression ANDOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "ANDOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | NOTOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "NOTOP");
+        add_child($$, $2);
+    } | expression EQUOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "EQUOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | expression RELOP expression {
+        $$ = create_ast_node(EXPRESSION_NODE, "RELOP");
+        add_child($$, $1);
+        add_child($$, $3);
+    } | LPAREN expression RPAREN {
+        $$ = $2;
+    } | var_ref {
+        $$ = $1;
+    } | sign constant {
+        $$ = $2;
+    } | function_call {
+        $$ = $1;
+    }
+;
+
+
+incr_id:
+    ID INCR{
         if (find_word_on_all_symboltablelist(symbol_table_stack, $1.sval) == NULL) {
             print_error_variable_no_declarada (($1.sval), lineno);
+            $$ = NULL;
+        } else{
+            //
+            $$ = create_ast_node(ID_INCR_NODE, $1.sval);
         }
     }
-        |
-        INCR ID {
-            if (find_word_on_all_symboltablelist(symbol_table_stack, $2.sval) == NULL) {
+    | INCR ID {
+        if (find_word_on_all_symboltablelist(symbol_table_stack, $2.sval) == NULL) {
             print_error_variable_no_declarada (($2.sval), lineno);
+            $$ = NULL;
+        } else{
+            $$ = create_ast_node(INCR_ID_NODE, $2.sval);
         }
     }
+;
 
-sign: ADDOP | MINUSOP | /* empty */ ; 
+decr_id:
+    ID DECR{
+        if (find_word_on_all_symboltablelist(symbol_table_stack, $1.sval) == NULL) {
+            print_error_variable_no_declarada (($1.sval), lineno);
+            $$ = NULL;
+        } else{
+            //
+            $$ = create_ast_node(ID_DECR_NODE, $1.sval);
+        }
+    }
+    | DECR ID {
+        if (find_word_on_all_symboltablelist(symbol_table_stack, $2.sval) == NULL) {
+            print_error_variable_no_declarada (($2.sval), lineno);
+            $$ = NULL;
+        } else{
+            $$ = create_ast_node(DECR_ID_NODE, $2.sval);
+        }
+    }
+;
 
-assigment: var_ref ASSIGN expression;
+sign:
+    ADDOP {
+        $$ = create_ast_node(ADD_NODE, "");
+    }
+    | MINUSOP {
+        $$ = create_ast_node(MINUS_NODE,"");
+    }
+    | /* empty */ {
+        $$ = NULL;
+    }
+;
 
-var_ref  : variable | REFER variable ; 
+assigment:
+    var_ref ASSIGN expression {
+        $$ = create_ast_node(ASSIGNMENT_NODE, "ASSIGNMENT");
+        add_child($$, $1);
+        add_child($$, $3);
+    }
+;
 
-function_call: ID LPAREN call_params RPAREN;
+var_ref:
+    variable {
+        $$ = $1;
+    }
+    | REFER variable {
+    /*
+    $$ = create_ast_node(REFERENCE_NODE, "REFERENCE", NULL); // Crear nodo de referencia
+    add_child($$, $2); // Añadir la variable como hijo
+    */
+    }
+;
 
-call_params: call_param | STRING | /* empty */
+function_call:
+    ID LPAREN call_params RPAREN {
+        $$ = create_ast_node(FUNCTION_CALL_NODE, $1.sval); // Crear nodo de llamada a función
+        if ($3 != NULL) {
+            add_child($$, $3); // Añadir los parámetros de llamada como hijos
+        }
+    }
+;
 
-call_param : call_param COMMA expression | expression ; 
+call_params:
+    call_param{
+        $$ = $1;
+    } | STRING {
+        $$ = create_ast_node(STRING_NODE, $1.sval);
+    }| /* empty */{
+        $$ = NULL;
+    };
+
+call_param:
+    call_param COMMA expression {
+        $$ = create_and_add_node(CALL_PARAM_NODE,"CALL_PARAM_NODE",$3);
+        add_child($$, $1);
+    }| expression {
+        $$ = create_ast_node(CALL_PARAM_NODE, "CALL_PARAM_NODE");
+        add_child($$, $1);
+    };
 
 semi_token : SEMI | error {yyerror("Falta ; al final de la instruccion"); yyerrok;}
 rbrace_token: RBRACE | error {yyerror("Falta } al final"); yyerrok;}
@@ -349,6 +709,7 @@ void yyerror (const char *s) {
 /*
 bison -d parser.y
 gcc -o programa parser.tab.c lex.yy.c
+gcc -o programa ast.c parser.tab.c lex.yy.c
 ./programa test2.c
 */
 int main (int argc, char *argv[]){
@@ -360,6 +721,7 @@ int main (int argc, char *argv[]){
 	flag = yyparse();
 	fclose(yyin);
 	
+    print_AST_tree(root, 0);
 	printf("bye bye!\n");
 	
 	// symbol table dump

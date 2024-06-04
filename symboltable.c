@@ -102,6 +102,9 @@ int update_value_node(Trie_node* root, char* word, int value){
 }
 
 Trie_node* find_word(Trie_node* root, char* word){
+    if (root == NULL){
+        return NULL;
+    }
     Trie_node* current = root;
     for(int i = 0; word[i] != '\0'; i++){
         if(current->children == NULL){
@@ -233,6 +236,9 @@ void insert_word_on_top(SymbolTableList* list, char* word){
 }
 
 Trie_node* find_word_on_start_symboltablelist(SymbolTableList* list, char* word){
+    if (list->start == NULL){
+        return NULL;
+    }
     return find_word(list->start->head, word);
 }
 Trie_node* find_word_on_all_symboltablelist(SymbolTableList* list, char* word){
@@ -249,4 +255,39 @@ Trie_node* find_word_on_all_symboltablelist(SymbolTableList* list, char* word){
         symbolTable = symbolTable->next;
     }
     return NULL;
+}
+
+char* intToStr(int number) {
+    int num = number;
+    int length = 0;
+    int temp = num;
+    
+    // Cuenta el número de dígitos
+    while (temp != 0) {
+        length++;
+        temp /= 10;
+    }
+    
+    // Maneja el caso de que el número sea 0
+    if (number == 0) {
+        length = 1;
+    }
+
+    // Asigna memoria para la cadena (incluye el terminador nulo)
+    char* str = (char*)malloc((length + 1) * sizeof(char));
+    str[length] = '\0'; // Terminador nulo
+
+    // Maneja el caso de que el número sea 0
+    if (number == 0) {
+        str[0] = '0';
+        return str;
+    }
+
+    // Llena la cadena con los dígitos
+    for (int i = length - 1; i >= 0; i--) {
+        str[i] = (num % 10) + '0';
+        num /= 10;
+    }
+
+    return str;
 }

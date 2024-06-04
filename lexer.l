@@ -59,7 +59,8 @@ STRING      \"{printableChar}*\"
 "-"             { return MINUSOP; }
 "*"                 { return MULOP; }
 "/"                 { return DIVOP; }
-"++"|"--"           { return INCR; }
+"++"            { return INCR; }
+"--"            { return DECR; }
 "||"                { return OROP; }
 "&&"                { return ANDOP; }
 "!"                 { return NOTOP; }

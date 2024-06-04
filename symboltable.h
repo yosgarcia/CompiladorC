@@ -70,4 +70,6 @@ void insert_word_on_top(SymbolTableList* list, char* word);
 Trie_node* find_word_on_start_symboltablelist(SymbolTableList* list, char* word);
 Trie_node* find_word_on_all_symboltablelist(SymbolTableList* list, char* word);
 
+//extras
+char* intToStr(int number);
 #endif
