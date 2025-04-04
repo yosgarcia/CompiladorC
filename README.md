@@ -1,3 +1,3 @@
-# CompiladorC
+# Compilador C
 
-### Como compilar y ejecutar el programa:
+
